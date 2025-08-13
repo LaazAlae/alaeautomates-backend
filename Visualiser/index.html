@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AlaeAutomates API Explorer</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-rocket"></i>
+                    <h1>AlaeAutomates API Explorer</h1>
+                </div>
+                <div class="header-info">
+                    <span class="version">v2.0.0</span>
+                    <div class="base-url">
+                        <label for="baseUrl">Base URL:</label>
+                        <input type="text" id="baseUrl" value="http://localhost:5000" placeholder="https://your-app.railway.app">
+                        <button id="testConnection" class="btn-test">Test Connection</button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Navigation -->
+        <nav class="nav-tabs">
+            <button class="tab-btn active" data-section="overview">Overview</button>
+            <button class="tab-btn" data-section="cc-batch">Credit Card Automation</button>
+            <button class="tab-btn" data-section="monthly-statements">Monthly Statements</button>
+            <button class="tab-btn" data-section="invoices">Invoice Processing</button>
+            <button class="tab-btn" data-section="excel-macros">Excel Macros</button>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Overview Section -->
+            <section id="overview" class="api-section active">
+                <div class="section-header">
+                    <h2><i class="fas fa-info-circle"></i> API Overview</h2>
+                    <p>Complete REST API for financial document automation with legacy Edge compatibility</p>
+                </div>
+
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <i class="fas fa-credit-card"></i>
+                        <h3>Credit Card Automation</h3>
+                        <p>Generate robust JavaScript automation for payment processing with legacy browser support</p>
+                        <div class="endpoints">
+                            <span class="method post">POST</span> /api/v1/cc-batch/process<br>
+                            <span class="method post">POST</span> /api/v1/cc-batch/parse-excel-text<br>
+                            <span class="method get">GET</span> /api/v1/cc-batch/docs
+                        </div>
+                    </div>
+
+                    <div class="feature-card">
+                        <i class="fas fa-file-invoice"></i>
+                        <h3>Monthly Statements</h3>
+                        <p>Process PDF statements and Excel files to categorize transactions automatically</p>
+                        <div class="endpoints">
+                            <span class="method post">POST</span> /api/v1/monthly-statements/process<br>
+                            <span class="method get">GET</span> /api/v1/monthly-statements/status/{id}<br>
+                            <span class="method get">GET</span> /api/v1/monthly-statements/download/{id}
+                        </div>
+                    </div>
+
+                    <div class="feature-card">
+                        <i class="fas fa-file-pdf"></i>
+                        <h3>Invoice Processing</h3>
+                        <p>Split multi-invoice PDFs into separate files for easier processing</p>
+                        <div class="endpoints">
+                            <span class="method post">POST</span> /api/v1/invoices/separate<br>
+                            <span class="method get">GET</span> /api/v1/invoices/download/{filename}
+                        </div>
+                    </div>
+
+                    <div class="feature-card">
+                        <i class="fas fa-file-excel"></i>
+                        <h3>Excel Macros</h3>
+                        <p>Get VBA macro codes for Excel automation and data processing</p>
+                        <div class="endpoints">
+                            <span class="method get">GET</span> /api/v1/excel-macros/cleanup<br>
+                            <span class="method get">GET</span> /api/v1/excel-macros/sort
+                        </div>
+                    </div>
+                </div>
+
+                <div class="quick-test">
+                    <h3><i class="fas fa-heartbeat"></i> Quick Health Check</h3>
+                    <button id="healthCheck" class="btn-primary">
+                        <i class="fas fa-play"></i> Test API Health
+                    </button>
+                    <div id="healthResult" class="result-display"></div>
+                </div>
+            </section>
+
+            <!-- Credit Card Batch Section -->
+            <section id="cc-batch" class="api-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-credit-card"></i> Credit Card Batch Automation</h2>
+                    <p>Generate robust JavaScript automation with legacy Edge compatibility</p>
+                </div>
+
+                <!-- Parse Excel Text Endpoint -->
+                <div class="endpoint-card">
+                    <div class="endpoint-header">
+                        <div class="endpoint-title">
+                            <span class="method post">POST</span>
+                            <span class="path">/api/v1/cc-batch/parse-excel-text</span>
+                        </div>
+                        <button class="btn-toggle" data-target="parse-excel-text">
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                    </div>
+                    <div class="endpoint-content" id="parse-excel-text">
+                        <p class="description">Parse Excel data from text input and generate robust JavaScript automation code</p>
+                        
+                        <div class="endpoint-details">
+                            <div class="request-section">
+                                <h4>Request Body (JSON)</h4>
+                                <div class="code-block">
+                                    <pre><code class="language-json">{
+  "excel_text": "R130587    AMEX-1006    105.00    Wanyi Yang\nR131702    AMEX-1007    210.00    Virginia Clarke"
+}</code></pre>
+                                </div>
+                                
+                                <div class="test-form">
+                                    <label for="excelTextInput">Excel Text Data:</label>
+                                    <textarea id="excelTextInput" rows="4" placeholder="R130587    AMEX-1006    105.00    Wanyi Yang&#10;R131702    AMEX-1007    210.00    Virginia Clarke"></textarea>
+                                    <button class="btn-test" onclick="testParseExcelText()">
+                                        <i class="fas fa-play"></i> Test Request
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="response-section">
+                                <h4>Response Format</h4>
+                                <div class="code-block">
+                                    <pre><code class="language-json">{
+  "success": true,
+  "records_count": 2,
+  "javascript_code": "// ROBUST HEADLESS PAYMENT AUTOMATION...",
+  "processed_data": [...],
+  "message": "Successfully generated code for 2 records"
+}</code></pre>
+                                </div>
+                                <div id="parseExcelTextResult" class="result-display"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Process Excel File Endpoint -->
+                <div class="endpoint-card">
+                    <div class="endpoint-header">
+                        <div class="endpoint-title">
+                            <span class="method post">POST</span>
+                            <span class="path">/api/v1/cc-batch/process</span>
+                        </div>
+                        <button class="btn-toggle" data-target="process-excel">
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                    </div>
+                    <div class="endpoint-content" id="process-excel">
+                        <p class="description">Upload Excel file for credit card automation processing</p>
+                        
+                        <div class="endpoint-details">
+                            <div class="request-section">
+                                <h4>Request Body (multipart/form-data)</h4>
+                                <div class="test-form">
+                                    <label for="excelFileInput">Excel File:</label>
+                                    <input type="file" id="excelFileInput" accept=".xlsx,.xls">
+                                    <button class="btn-test" onclick="testProcessExcel()">
+                                        <i class="fas fa-upload"></i> Upload & Process
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="response-section">
+                                <h4>Response Format</h4>
+                                <div class="code-block">
+                                    <pre><code class="language-json">{
+  "success": true,
+  "records_count": 10,
+  "javascript_code": "// Generated automation code...",
+  "processed_data": [...],
+  "message": "Successfully processed 10 credit card records"
+}</code></pre>
+                                </div>
+                                <div id="processExcelResult" class="result-display"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Download Code Endpoint -->
+                <div class="endpoint-card">
+                    <div class="endpoint-header">
+                        <div class="endpoint-title">
+                            <span class="method post">POST</span>
+                            <span class="path">/api/v1/cc-batch/download-code</span>
+                        </div>
+                        <button class="btn-toggle" data-target="download-code">
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                    </div>
+                    <div class="endpoint-content" id="download-code">
+                        <p class="description">Download generated JavaScript automation code as a file</p>
+                        
+                        <div class="endpoint-details">
+                            <div class="request-section">
+                                <h4>Request Body (JSON)</h4>
+                                <div class="code-block">
+                                    <pre><code class="language-json">{
+  "code": "// Your generated JavaScript code here..."
+}</code></pre>
+                                </div>
+                                
+                                <div class="test-form">
+                                    <label for="jsCodeInput">JavaScript Code:</label>
+                                    <textarea id="jsCodeInput" rows="3" placeholder="Paste generated JavaScript code here..."></textarea>
+                                    <button class="btn-test" onclick="testDownloadCode()">
+                                        <i class="fas fa-download"></i> Download File
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="response-section">
+                                <h4>Response</h4>
+                                <p>Downloads a .js file with the automation code</p>
+                                <div id="downloadCodeResult" class="result-display"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Monthly Statements Section -->
+            <section id="monthly-statements" class="api-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-file-invoice"></i> Monthly Statements Processing</h2>
+                    <p>Process PDF statements with Excel company lists for transaction categorization</p>
+                </div>
+
+                <!-- Process Statements Endpoint -->
+                <div class="endpoint-card">
+                    <div class="endpoint-header">
+                        <div class="endpoint-title">
+                            <span class="method post">POST</span>
+                            <span class="path">/api/v1/monthly-statements/process</span>
+                        </div>
+                        <button class="btn-toggle" data-target="process-statements">
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                    </div>
+                    <div class="endpoint-content" id="process-statements">
+                        <p class="description">Start processing PDF statements with Excel company list</p>
+                        
+                        <div class="endpoint-details">
+                            <div class="request-section">
+                                <h4>Request Body (multipart/form-data)</h4>
+                                <div class="test-form">
+                                    <label for="pdfFileInput">PDF File:</label>
+                                    <input type="file" id="pdfFileInput" accept=".pdf">
+                                    <label for="excelStatementsInput">Excel File:</label>
+                                    <input type="file" id="excelStatementsInput" accept=".xlsx,.xls">
+                                    <button class="btn-test" onclick="testProcessStatements()">
+                                        <i class="fas fa-upload"></i> Process Files
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="response-section">
+                                <h4>Response Format</h4>
+                                <div class="code-block">
+                                    <pre><code class="language-json">{
+  "success": true,
+  "session_id": "abc123-def456-ghi789",
+  "message": "Processing started"
+}</code></pre>
+                                </div>
+                                <div id="processStatementsResult" class="result-display"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Status Check Endpoint -->
+                <div class="endpoint-card">
+                    <div class="endpoint-header">
+                        <div class="endpoint-title">
+                            <span class="method get">GET</span>
+                            <span class="path">/api/v1/monthly-statements/status/{session_id}</span>
+                        </div>
+                        <button class="btn-toggle" data-target="check-status">
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                    </div>
+                    <div class="endpoint-content" id="check-status">
+                        <p class="description">Check processing status of a session</p>
+                        
+                        <div class="endpoint-details">
+                            <div class="request-section">
+                                <h4>Path Parameters</h4>
+                                <div class="test-form">
+                                    <label for="sessionIdInput">Session ID:</label>
+                                    <input type="text" id="sessionIdInput" placeholder="abc123-def456-ghi789">
+                                    <button class="btn-test" onclick="testCheckStatus()">
+                                        <i class="fas fa-search"></i> Check Status
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="response-section">
+                                <h4>Response Format</h4>
+                                <div class="code-block">
+                                    <pre><code class="language-json">{
+  "status": "completed",
+  "progress": 100,
+  "requires_questions": false,
+  "message": "Processing completed successfully"
+}</code></pre>
+                                </div>
+                                <div id="checkStatusResult" class="result-display"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Invoices Section -->
+            <section id="invoices" class="api-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-file-pdf"></i> Invoice Processing</h2>
+                    <p>Split multi-invoice PDFs into separate files</p>
+                </div>
+
+                <!-- Separate Invoices Endpoint -->
+                <div class="endpoint-card">
+                    <div class="endpoint-header">
+                        <div class="endpoint-title">
+                            <span class="method post">POST</span>
+                            <span class="path">/api/v1/invoices/separate</span>
+                        </div>
+                        <button class="btn-toggle" data-target="separate-invoices">
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                    </div>
+                    <div class="endpoint-content" id="separate-invoices">
+                        <p class="description">Separate multi-invoice PDF into individual invoice files</p>
+                        
+                        <div class="endpoint-details">
+                            <div class="request-section">
+                                <h4>Request Body (multipart/form-data)</h4>
+                                <div class="test-form">
+                                    <label for="invoicePdfInput">PDF File:</label>
+                                    <input type="file" id="invoicePdfInput" accept=".pdf">
+                                    <button class="btn-test" onclick="testSeparateInvoices()">
+                                        <i class="fas fa-scissors"></i> Separate Invoices
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="response-section">
+                                <h4>Response Format</h4>
+                                <div class="code-block">
+                                    <pre><code class="language-json">{
+  "success": true,
+  "message": "Invoices separated successfully",
+  "invoice_count": 5,
+  "download_url": "/api/v1/invoices/download/invoices_20240101_123456.zip"
+}</code></pre>
+                                </div>
+                                <div id="separateInvoicesResult" class="result-display"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Excel Macros Section -->
+            <section id="excel-macros" class="api-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-file-excel"></i> Excel Macros</h2>
+                    <p>Get VBA macro codes for Excel automation</p>
+                </div>
+
+                <!-- Cleanup Macro Endpoint -->
+                <div class="endpoint-card">
+                    <div class="endpoint-header">
+                        <div class="endpoint-title">
+                            <span class="method get">GET</span>
+                            <span class="path">/api/v1/excel-macros/cleanup</span>
+                        </div>
+                        <button class="btn-toggle" data-target="cleanup-macro">
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                    </div>
+                    <div class="endpoint-content" id="cleanup-macro">
+                        <p class="description">Get VBA macro code for data cleanup</p>
+                        
+                        <div class="endpoint-details">
+                            <div class="request-section">
+                                <h4>Request</h4>
+                                <p>No parameters required</p>
+                                <button class="btn-test" onclick="testCleanupMacro()">
+                                    <i class="fas fa-code"></i> Get Cleanup Macro
+                                </button>
+                            </div>
+
+                            <div class="response-section">
+                                <h4>Response Format</h4>
+                                <div class="code-block">
+                                    <pre><code class="language-json">{
+  "macro_name": "DataCleanup",
+  "macro_code": "Sub DataCleanup()...",
+  "instructions": [...],
+  "features": [...]
+}</code></pre>
+                                </div>
+                                <div id="cleanupMacroResult" class="result-display"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sort Macro Endpoint -->
+                <div class="endpoint-card">
+                    <div class="endpoint-header">
+                        <div class="endpoint-title">
+                            <span class="method get">GET</span>
+                            <span class="path">/api/v1/excel-macros/sort</span>
+                        </div>
+                        <button class="btn-toggle" data-target="sort-macro">
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                    </div>
+                    <div class="endpoint-content" id="sort-macro">
+                        <p class="description">Get VBA macro code for sorting and summing data</p>
+                        
+                        <div class="endpoint-details">
+                            <div class="request-section">
+                                <h4>Request</h4>
+                                <p>No parameters required</p>
+                                <button class="btn-test" onclick="testSortMacro()">
+                                    <i class="fas fa-sort"></i> Get Sort Macro
+                                </button>
+                            </div>
+
+                            <div class="response-section">
+                                <h4>Response Format</h4>
+                                <div class="code-block">
+                                    <pre><code class="language-json">{
+  "macro_name": "SortAndSum",
+  "macro_code": "Sub SortAndSum()...",
+  "instructions": [...],
+  "features": [...]
+}</code></pre>
+                                </div>
+                                <div id="sortMacroResult" class="result-display"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
