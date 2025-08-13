@@ -14,12 +14,25 @@ import time
 import json
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Any, Set
-import magic
+# import magic  # Removed due to Railway deployment issues
 from werkzeug.utils import secure_filename
 from functools import wraps
 from collections import defaultdict, deque
 
 logger = logging.getLogger(__name__)
+
+def _detect_file_type(header: bytes) -> Optional[str]:
+    """Simple file type detection using magic numbers"""
+    if header.startswith(b'%PDF-'):
+        return 'application/pdf'
+    elif header.startswith(b'PK\x03\x04'):  # ZIP-based files (Excel)
+        # Check for Excel-specific markers in the header
+        if b'xl/' in header or b'[Content_Types].xml' in header:
+            return 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        return 'application/zip'
+    elif header.startswith(b'\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1'):  # Old Excel format
+        return 'application/vnd.ms-excel'
+    return None
 
 class SecurityConfig:
     """Enhanced security configuration constants with comprehensive protections"""
@@ -161,17 +174,13 @@ def validate_file_content(file_obj, allowed_mime_types: List[str]) -> Dict[str, 
         header = file_obj.read(min(8192, file_size))  # Read up to 8KB
         file_obj.seek(0)
         
-        # Get MIME type using python-magic
-        try:
-            mime_type = magic.from_buffer(header, mime=True)
-        except Exception as e:
-            logger.error(f"Magic detection failed: {e}")
-            return {'valid': False, 'error': 'Cannot validate file type'}
+        # Simple file type validation using magic numbers (without python-magic)
+        mime_type = _detect_file_type(header)
         
-        if mime_type not in allowed_mime_types:
+        if not mime_type or mime_type not in allowed_mime_types:
             return {
                 'valid': False, 
-                'error': f'Invalid file type. Expected: {allowed_mime_types}, Got: {mime_type}'
+                'error': f'Invalid file type. Expected: {allowed_mime_types}, Got: {mime_type or "unknown"}'
             }
         
         # Additional PDF-specific validation
