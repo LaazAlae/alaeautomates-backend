@@ -396,12 +396,116 @@ class APIExplorer {
 
         this.displayResult('processStatementsResult', null, true);
         
-        const formData = new FormData();
-        formData.append('pdf_file', pdfInput.files[0]);
-        formData.append('excel_file', excelInput.files[0]);
+        try {
+            // Step 1: Start processing
+            const formData = new FormData();
+            formData.append('pdf_file', pdfInput.files[0]);
+            formData.append('excel_file', excelInput.files[0]);
+            
+            const startResult = await this.makeFormRequest('/api/v1/monthly-statements/process', formData);
+            
+            if (!startResult.ok) {
+                this.displayResult('processStatementsResult', startResult);
+                return;
+            }
+            
+            const sessionId = startResult.data.session_id;
+            
+            // Step 2: Poll status with proper intervals and error handling
+            await this.pollProcessingStatus(sessionId, 'processStatementsResult');
+            
+        } catch (error) {
+            this.displayResult('processStatementsResult', {
+                ok: false,
+                error: error.message
+            });
+        }
+    }
+    
+    async pollProcessingStatus(sessionId, resultElementId) {
+        const maxAttempts = 60; // 5 minutes max
+        let attempts = 0;
+        let delay = 5000; // Start with 5 second intervals
         
-        const result = await this.makeFormRequest('/api/v1/monthly-statements/process', formData);
-        this.displayResult('processStatementsResult', result);
+        const poll = async () => {
+            attempts++;
+            
+            try {
+                const statusResult = await this.makeRequest(`/api/v1/monthly-statements/status/${sessionId}`);
+                
+                if (statusResult.status === 429) {
+                    // Rate limited - increase delay
+                    delay = Math.min(delay * 1.5, 15000); // Max 15 seconds
+                    this.updateProcessingStatus(resultElementId, `Rate limited, waiting ${Math.round(delay/1000)}s...`);
+                } else if (statusResult.ok) {
+                    const status = statusResult.data.status;
+                    const progress = statusResult.data.progress || {};
+                    
+                    if (status === 'completed') {
+                        // Processing complete - show final results
+                        this.displayResult(resultElementId, {
+                            ok: true,
+                            data: {
+                                message: 'Processing completed successfully!',
+                                session_id: sessionId,
+                                total_statements: progress.total_statements,
+                                processed_statements: progress.processed_statements,
+                                statements_needing_review: progress.statements_needing_review,
+                                download_url: `/api/v1/monthly-statements/download/${sessionId}`
+                            }
+                        });
+                        return;
+                    } else if (status === 'error') {
+                        this.displayResult(resultElementId, {
+                            ok: false,
+                            error: statusResult.data.error || 'Processing failed'
+                        });
+                        return;
+                    } else {
+                        // Still processing
+                        const progressText = progress.processed_statements ? 
+                            `Processing: ${progress.processed_statements}/${progress.total_statements} statements` :
+                            'Processing statements...';
+                        this.updateProcessingStatus(resultElementId, progressText);
+                    }
+                } else {
+                    this.updateProcessingStatus(resultElementId, 'Error checking status, retrying...');
+                }
+                
+                // Continue polling if not complete and under max attempts
+                if (attempts < maxAttempts) {
+                    setTimeout(poll, delay);
+                } else {
+                    this.displayResult(resultElementId, {
+                        ok: false,
+                        error: 'Processing timeout - please check status manually'
+                    });
+                }
+                
+            } catch (error) {
+                if (attempts < maxAttempts) {
+                    this.updateProcessingStatus(resultElementId, 'Connection error, retrying...');
+                    setTimeout(poll, delay);
+                } else {
+                    this.displayResult(resultElementId, {
+                        ok: false,
+                        error: `Polling failed: ${error.message}`
+                    });
+                }
+            }
+        };
+        
+        // Start polling
+        setTimeout(poll, 2000); // Initial delay
+    }
+    
+    updateProcessingStatus(elementId, message) {
+        const element = document.getElementById(elementId);
+        if (element) {
+            element.classList.remove('success', 'error');
+            element.classList.add('loading', 'show');
+            element.innerHTML = `<div class="loading-spinner"></div>${message}`;
+        }
     }
 
     async testCheckStatus() {

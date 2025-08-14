@@ -351,7 +351,7 @@ class AlaeAutomatesAPI {
 
 Once deployed, your API Visualizer will be available at:
 ```
-https://your-project-name.railway.app/visualizer
+https://backendapis.up.railway.app
 ```
 
 **Features:**
