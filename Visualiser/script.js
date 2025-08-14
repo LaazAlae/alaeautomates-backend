@@ -1,7 +1,7 @@
 // AlaeAutomates API Explorer JavaScript
 class APIExplorer {
     constructor() {
-        this.baseUrl = 'http://localhost:5000';
+        this.baseUrl = 'http://localhost:8080';
         this.init();
     }
 
