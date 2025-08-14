@@ -2,6 +2,8 @@
 class APIExplorer {
     constructor() {
         this.baseUrl = window.location.origin;
+        console.log(`[APIExplorer] Initialized with base URL: ${this.baseUrl}`);
+        console.log(`[APIExplorer] Window location:`, window.location);
         this.init();
     }
 
@@ -79,6 +81,9 @@ class APIExplorer {
 
     async makeRequest(url, options = {}) {
         const fullUrl = `${this.baseUrl}${url}`;
+        console.log(`[APIExplorer] Making request to: ${fullUrl}`);
+        console.log(`[APIExplorer] Base URL: ${this.baseUrl}`);
+        console.log(`[APIExplorer] Request options:`, options);
         
         try {
             const response = await fetch(fullUrl, {
@@ -89,7 +94,11 @@ class APIExplorer {
                 }
             });
 
+            console.log(`[APIExplorer] Response status: ${response.status}`);
+            console.log(`[APIExplorer] Response ok: ${response.ok}`);
+
             const data = await response.json();
+            console.log(`[APIExplorer] Response data:`, data);
             
             return {
                 ok: response.ok,
@@ -97,6 +106,9 @@ class APIExplorer {
                 data: data
             };
         } catch (error) {
+            console.error(`[APIExplorer] Request failed:`, error);
+            console.error(`[APIExplorer] Error message: ${error.message}`);
+            console.error(`[APIExplorer] Error stack:`, error.stack);
             return {
                 ok: false,
                 status: 0,
