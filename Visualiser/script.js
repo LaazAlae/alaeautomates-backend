@@ -73,10 +73,20 @@ class APIExplorer {
 
     loadBaseUrl() {
         const savedUrl = localStorage.getItem('apiBaseUrl');
-        if (savedUrl) {
+        console.log(`[APIExplorer] Saved URL from localStorage: ${savedUrl}`);
+        console.log(`[APIExplorer] Current window.location.origin: ${window.location.origin}`);
+        
+        // Only use saved URL if it's empty or matches current domain
+        if (savedUrl && savedUrl !== window.location.origin) {
+            console.log(`[APIExplorer] Clearing outdated localStorage URL: ${savedUrl}`);
+            localStorage.removeItem('apiBaseUrl');
+        } else if (savedUrl) {
             this.baseUrl = savedUrl;
-            document.getElementById('baseUrl').value = savedUrl;
         }
+        
+        // Always update the input field to show current base URL
+        document.getElementById('baseUrl').value = this.baseUrl;
+        console.log(`[APIExplorer] Final base URL: ${this.baseUrl}`);
     }
 
     async makeRequest(url, options = {}) {
