@@ -464,9 +464,9 @@ class APIExplorer {
                                 <div style="text-align: left;">
                                     <h3 style="color: var(--color-success); margin-bottom: 16px;">✅ API Response - Processing Complete</h3>
                                     
-                                    <div style="background: #f8f9fa; padding: 16px; border-radius: 8px; margin-bottom: 16px;">
-                                        <h4 style="margin: 0 0 8px 0; color: var(--color-gray-700);">Status Response JSON:</h4>
-                                        <pre style="margin: 0; font-size: 13px; white-space: pre-wrap; color: var(--color-gray-800);">${JSON.stringify(apiResponse, null, 2)}</pre>
+                                    <div style="background: #1e1e1e; padding: 16px; border-radius: 8px; margin-bottom: 16px; border: 1px solid #333;">
+                                        <h4 style="margin: 0 0 8px 0; color: #fff;">Status Response JSON:</h4>
+                                        <pre style="margin: 0; font-size: 13px; white-space: pre-wrap; color: #fff; font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;">${JSON.stringify(apiResponse, null, 2)}</pre>
                                     </div>
                                     
                                     <div style="background: #e3f2fd; padding: 16px; border-radius: 8px; margin-bottom: 16px;">
@@ -484,21 +484,44 @@ class APIExplorer {
                                     </div>
                                     
                                     <div style="text-align: center;">
-                                        <button onclick="window.open('${this.baseUrl}/api/v1/monthly-statements/download/${sessionId}', '_blank')" 
-                                                class="btn btn-primary" style="margin: 4px;">
-                                            📥 Test Download Endpoint
+                                        <button type="button" class="btn btn-primary" style="margin: 4px;" data-action="download" data-url="${this.baseUrl}/api/v1/monthly-statements/download/${sessionId}">
+                                            Test Download Endpoint
                                         </button>
-                                        <button onclick="window.open('${this.baseUrl}/api/v1/monthly-statements/results/${sessionId}', '_blank')" 
-                                                class="btn btn-outline" style="margin: 4px;">
-                                            📋 Test Results JSON
+                                        <button type="button" class="btn btn-outline" style="margin: 4px;" data-action="results" data-url="${this.baseUrl}/api/v1/monthly-statements/results/${sessionId}">
+                                            Test Results JSON
                                         </button>
-                                        <button onclick="navigator.clipboard.writeText('${sessionId}')" 
-                                                class="btn btn-secondary" style="margin: 4px;">
-                                            📋 Copy Session ID
+                                        <button type="button" class="btn btn-secondary" style="margin: 4px;" data-action="copy" data-text="${sessionId}">
+                                            Copy Session ID
                                         </button>
                                     </div>
                                 </div>
                             `;
+                            
+                            // Add event listeners for the buttons
+                            setTimeout(() => {
+                                const buttons = resultElement.querySelectorAll('button[data-action]');
+                                buttons.forEach(btn => {
+                                    btn.addEventListener('click', (e) => {
+                                        const action = e.target.getAttribute('data-action');
+                                        if (action === 'download') {
+                                            const url = e.target.getAttribute('data-url');
+                                            window.open(url, '_blank');
+                                        } else if (action === 'results') {
+                                            const url = e.target.getAttribute('data-url');
+                                            window.open(url, '_blank');
+                                        } else if (action === 'copy') {
+                                            const text = e.target.getAttribute('data-text');
+                                            navigator.clipboard.writeText(text).then(() => {
+                                                const originalText = e.target.textContent;
+                                                e.target.textContent = 'Copied!';
+                                                setTimeout(() => {
+                                                    e.target.textContent = originalText;
+                                                }, 2000);
+                                            });
+                                        }
+                                    });
+                                });
+                            }, 100);
                         }
                         return;
                     } else if (status === 'error') {
