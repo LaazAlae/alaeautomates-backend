@@ -30,6 +30,14 @@ class APIExplorer {
         document.getElementById('healthCheck').addEventListener('click', () => {
             this.testHealthCheck();
         });
+
+        // API test buttons
+        document.querySelectorAll('.btn-test[data-test]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const testType = e.target.closest('button').getAttribute('data-test');
+                this.handleApiTest(testType);
+            });
+        });
     }
 
     setupTabNavigation() {
@@ -232,166 +240,185 @@ class APIExplorer {
         const result = await this.makeRequest('/');
         this.displayResult('healthResult', result);
     }
-}
 
-// API Testing Functions
-async function testParseExcelText() {
-    const apiExplorer = window.apiExplorer;
-    const excelText = document.getElementById('excelTextInput').value.trim();
-    
-    if (!excelText) {
-        alert('Please enter Excel text data');
-        return;
+    handleApiTest(testType) {
+        switch (testType) {
+            case 'parse-excel-text':
+                this.testParseExcelText();
+                break;
+            case 'process-excel':
+                this.testProcessExcel();
+                break;
+            case 'download-code':
+                this.testDownloadCode();
+                break;
+            case 'process-statements':
+                this.testProcessStatements();
+                break;
+            case 'check-status':
+                this.testCheckStatus();
+                break;
+            case 'separate-invoices':
+                this.testSeparateInvoices();
+                break;
+            case 'cleanup-macro':
+                this.testCleanupMacro();
+                break;
+            case 'sort-macro':
+                this.testSortMacro();
+                break;
+            default:
+                console.warn('Unknown test type:', testType);
+        }
     }
 
-    apiExplorer.displayResult('parseExcelTextResult', null, true);
-    
-    const result = await apiExplorer.makeRequest('/api/v1/cc-batch/parse-excel-text', {
-        method: 'POST',
-        body: JSON.stringify({ excel_text: excelText })
-    });
-    
-    apiExplorer.displayResult('parseExcelTextResult', result);
-}
+    async testParseExcelText() {
+        const excelText = document.getElementById('excelTextInput').value.trim();
+        
+        if (!excelText) {
+            alert('Please enter Excel text data');
+            return;
+        }
 
-async function testProcessExcel() {
-    const apiExplorer = window.apiExplorer;
-    const fileInput = document.getElementById('excelFileInput');
-    
-    if (!fileInput.files[0]) {
-        alert('Please select an Excel file');
-        return;
-    }
-
-    apiExplorer.displayResult('processExcelResult', null, true);
-    
-    const formData = new FormData();
-    formData.append('excel_file', fileInput.files[0]);
-    
-    const result = await apiExplorer.makeFormRequest('/api/v1/cc-batch/process', formData);
-    apiExplorer.displayResult('processExcelResult', result);
-}
-
-async function testDownloadCode() {
-    const apiExplorer = window.apiExplorer;
-    const jsCode = document.getElementById('jsCodeInput').value.trim();
-    
-    if (!jsCode) {
-        alert('Please enter JavaScript code');
-        return;
-    }
-
-    apiExplorer.displayResult('downloadCodeResult', null, true);
-    
-    try {
-        const fullUrl = `${apiExplorer.baseUrl}/api/v1/cc-batch/download-code`;
-        const response = await fetch(fullUrl, {
+        this.displayResult('parseExcelTextResult', null, true);
+        
+        const result = await this.makeRequest('/api/v1/cc-batch/parse-excel-text', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ code: jsCode })
+            body: JSON.stringify({ excel_text: excelText })
         });
+        
+        this.displayResult('parseExcelTextResult', result);
+    }
 
-        if (response.ok) {
-            // Handle file download
-            const blob = await response.blob();
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `automation_${Date.now()}.js`;
-            document.body.appendChild(a);
-            a.click();
-            window.URL.revokeObjectURL(url);
-            document.body.removeChild(a);
-            
-            apiExplorer.displayResult('downloadCodeResult', {
-                ok: true,
-                data: { message: 'File downloaded successfully' }
+    async testProcessExcel() {
+        const fileInput = document.getElementById('excelFileInput');
+        
+        if (!fileInput.files[0]) {
+            alert('Please select an Excel file');
+            return;
+        }
+
+        this.displayResult('processExcelResult', null, true);
+        
+        const formData = new FormData();
+        formData.append('excel_file', fileInput.files[0]);
+        
+        const result = await this.makeFormRequest('/api/v1/cc-batch/process', formData);
+        this.displayResult('processExcelResult', result);
+    }
+
+    async testDownloadCode() {
+        const jsCode = document.getElementById('jsCodeInput').value.trim();
+        
+        if (!jsCode) {
+            alert('Please enter JavaScript code');
+            return;
+        }
+
+        this.displayResult('downloadCodeResult', null, true);
+        
+        try {
+            const fullUrl = `${this.baseUrl}/api/v1/cc-batch/download-code`;
+            const response = await fetch(fullUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code: jsCode })
             });
-        } else {
-            const errorData = await response.json();
-            apiExplorer.displayResult('downloadCodeResult', {
+
+            if (response.ok) {
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `automation_${Date.now()}.js`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                
+                this.displayResult('downloadCodeResult', {
+                    ok: true,
+                    data: { message: 'File downloaded successfully' }
+                });
+            } else {
+                const errorData = await response.json();
+                this.displayResult('downloadCodeResult', {
+                    ok: false,
+                    status: response.status,
+                    data: errorData
+                });
+            }
+        } catch (error) {
+            this.displayResult('downloadCodeResult', {
                 ok: false,
-                status: response.status,
-                data: errorData
+                error: error.message
             });
         }
-    } catch (error) {
-        apiExplorer.displayResult('downloadCodeResult', {
-            ok: false,
-            error: error.message
-        });
-    }
-}
-
-async function testProcessStatements() {
-    const apiExplorer = window.apiExplorer;
-    const pdfFile = document.getElementById('pdfFileInput').files[0];
-    const excelFile = document.getElementById('excelStatementsInput').files[0];
-    
-    if (!pdfFile || !excelFile) {
-        alert('Please select both PDF and Excel files');
-        return;
     }
 
-    apiExplorer.displayResult('processStatementsResult', null, true);
-    
-    const formData = new FormData();
-    formData.append('pdf_file', pdfFile);
-    formData.append('excel_file', excelFile);
-    
-    const result = await apiExplorer.makeFormRequest('/api/v1/monthly-statements/process', formData);
-    apiExplorer.displayResult('processStatementsResult', result);
-}
+    async testProcessStatements() {
+        const pdfFile = document.getElementById('pdfFileInput').files[0];
+        const excelFile = document.getElementById('excelStatementsInput').files[0];
+        
+        if (!pdfFile || !excelFile) {
+            alert('Please select both PDF and Excel files');
+            return;
+        }
 
-async function testCheckStatus() {
-    const apiExplorer = window.apiExplorer;
-    const sessionId = document.getElementById('sessionIdInput').value.trim();
-    
-    if (!sessionId) {
-        alert('Please enter a session ID');
-        return;
+        this.displayResult('processStatementsResult', null, true);
+        
+        const formData = new FormData();
+        formData.append('pdf_file', pdfFile);
+        formData.append('excel_file', excelFile);
+        
+        const result = await this.makeFormRequest('/api/v1/monthly-statements/process', formData);
+        this.displayResult('processStatementsResult', result);
     }
 
-    apiExplorer.displayResult('checkStatusResult', null, true);
-    
-    const result = await apiExplorer.makeRequest(`/api/v1/monthly-statements/status/${sessionId}`);
-    apiExplorer.displayResult('checkStatusResult', result);
-}
+    async testCheckStatus() {
+        const sessionId = document.getElementById('sessionIdInput').value.trim();
+        
+        if (!sessionId) {
+            alert('Please enter a session ID');
+            return;
+        }
 
-async function testSeparateInvoices() {
-    const apiExplorer = window.apiExplorer;
-    const pdfFile = document.getElementById('invoicePdfInput').files[0];
-    
-    if (!pdfFile) {
-        alert('Please select a PDF file');
-        return;
+        this.displayResult('checkStatusResult', null, true);
+        
+        const result = await this.makeRequest(`/api/v1/monthly-statements/status/${sessionId}`);
+        this.displayResult('checkStatusResult', result);
     }
 
-    apiExplorer.displayResult('separateInvoicesResult', null, true);
-    
-    const formData = new FormData();
-    formData.append('pdf_file', pdfFile);
-    
-    const result = await apiExplorer.makeFormRequest('/api/v1/invoices/separate', formData);
-    apiExplorer.displayResult('separateInvoicesResult', result);
-}
+    async testSeparateInvoices() {
+        const pdfFile = document.getElementById('invoicePdfInput').files[0];
+        
+        if (!pdfFile) {
+            alert('Please select a PDF file');
+            return;
+        }
 
-async function testCleanupMacro() {
-    const apiExplorer = window.apiExplorer;
-    
-    apiExplorer.displayResult('cleanupMacroResult', null, true);
-    
-    const result = await apiExplorer.makeRequest('/api/v1/excel-macros/cleanup');
-    apiExplorer.displayResult('cleanupMacroResult', result);
-}
+        this.displayResult('separateInvoicesResult', null, true);
+        
+        const formData = new FormData();
+        formData.append('pdf_file', pdfFile);
+        
+        const result = await this.makeFormRequest('/api/v1/invoices/separate', formData);
+        this.displayResult('separateInvoicesResult', result);
+    }
 
-async function testSortMacro() {
-    const apiExplorer = window.apiExplorer;
-    
-    apiExplorer.displayResult('sortMacroResult', null, true);
-    
-    const result = await apiExplorer.makeRequest('/api/v1/excel-macros/sort');
-    apiExplorer.displayResult('sortMacroResult', result);
+    async testCleanupMacro() {
+        this.displayResult('cleanupMacroResult', null, true);
+        
+        const result = await this.makeRequest('/api/v1/excel-macros/cleanup');
+        this.displayResult('cleanupMacroResult', result);
+    }
+
+    async testSortMacro() {
+        this.displayResult('sortMacroResult', null, true);
+        
+        const result = await this.makeRequest('/api/v1/excel-macros/sort');
+        this.displayResult('sortMacroResult', result);
+    }
 }
 
 // Auto-fill sample data
@@ -412,7 +439,7 @@ document.addEventListener('DOMContentLoaded', () => {
     sampleBtn.textContent = '📝 Fill Sample Data';
     sampleBtn.className = 'btn-test';
     sampleBtn.style.marginLeft = '0.5rem';
-    sampleBtn.onclick = fillSampleData;
+    sampleBtn.addEventListener('click', fillSampleData);
     
     const excelTextInput = document.getElementById('excelTextInput');
     if (excelTextInput && excelTextInput.parentNode) {

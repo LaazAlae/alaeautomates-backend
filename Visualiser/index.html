@@ -152,7 +152,7 @@
                                 <div class="test-form">
                                     <label for="excelTextInput">Excel Text Data:</label>
                                     <textarea id="excelTextInput" rows="4" placeholder="R130587    AMEX-1006    105.00    Wanyi Yang&#10;R131702    AMEX-1007    210.00    Virginia Clarke"></textarea>
-                                    <button class="btn-test" onclick="testParseExcelText()">
+                                    <button class="btn-test" data-test="parse-excel-text">
                                         <i class="fas fa-play"></i> Test Request
                                     </button>
                                 </div>
@@ -195,7 +195,7 @@
                                 <div class="test-form">
                                     <label for="excelFileInput">Excel File:</label>
                                     <input type="file" id="excelFileInput" accept=".xlsx,.xls">
-                                    <button class="btn-test" onclick="testProcessExcel()">
+                                    <button class="btn-test" data-test="process-excel">
                                         <i class="fas fa-upload"></i> Upload & Process
                                     </button>
                                 </div>
@@ -244,7 +244,7 @@
                                 <div class="test-form">
                                     <label for="jsCodeInput">JavaScript Code:</label>
                                     <textarea id="jsCodeInput" rows="3" placeholder="Paste generated JavaScript code here..."></textarea>
-                                    <button class="btn-test" onclick="testDownloadCode()">
+                                    <button class="btn-test" data-test="download-code">
                                         <i class="fas fa-download"></i> Download File
                                     </button>
                                 </div>
@@ -308,7 +308,7 @@
                                     <input type="file" id="pdfFileInput" accept=".pdf">
                                     <label for="excelStatementsInput">Excel File:</label>
                                     <input type="file" id="excelStatementsInput" accept=".xlsx,.xls">
-                                    <button class="btn-test" onclick="testProcessStatements()">
+                                    <button class="btn-test" data-test="process-statements">
                                         <i class="fas fa-upload"></i> Process Files
                                     </button>
                                 </div>
@@ -349,7 +349,7 @@
                                 <div class="test-form">
                                     <label for="sessionIdInput">Session ID:</label>
                                     <input type="text" id="sessionIdInput" placeholder="abc123-def456-ghi789">
-                                    <button class="btn-test" onclick="testCheckStatus()">
+                                    <button class="btn-test" data-test="check-status">
                                         <i class="fas fa-search"></i> Check Status
                                     </button>
                                 </div>
@@ -417,7 +417,7 @@
                                 <div class="test-form">
                                     <label for="invoicePdfInput">PDF File:</label>
                                     <input type="file" id="invoicePdfInput" accept=".pdf">
-                                    <button class="btn-test" onclick="testSeparateInvoices()">
+                                    <button class="btn-test" data-test="separate-invoices">
                                         <i class="fas fa-scissors"></i> Separate Invoices
                                     </button>
                                 </div>
@@ -465,7 +465,7 @@
                             <div class="request-section">
                                 <h4>Request</h4>
                                 <p>No parameters required</p>
-                                <button class="btn-test" onclick="testCleanupMacro()">
+                                <button class="btn-test" data-test="cleanup-macro">
                                     <i class="fas fa-code"></i> Get Cleanup Macro
                                 </button>
                             </div>
@@ -504,7 +504,7 @@
                             <div class="request-section">
                                 <h4>Request</h4>
                                 <p>No parameters required</p>
-                                <button class="btn-test" onclick="testSortMacro()">
+                                <button class="btn-test" data-test="sort-macro">
                                     <i class="fas fa-sort"></i> Get Sort Macro
                                 </button>
                             </div>
