@@ -355,9 +355,15 @@ def get_status(session_id):
         
         if status == 'completed':
             questions = getattr(processor, 'questions_needed', [])
-            if questions:
-                response['requires_questions'] = True
-                response['questions_count'] = len(questions)
+            # Check if there are unanswered questions
+            unanswered_questions = [q for q in questions if not q.get('user_answered')]
+            
+            if unanswered_questions:
+                # Override status if there are still questions to answer
+                response['status'] = 'questions_ready'
+                response['questions_count'] = len(unanswered_questions)
+                response['total_questions'] = len(questions)
+                response['current_question'] = processor.current_question_index + 1
             else:
                 response['requires_questions'] = False
         elif status == 'error':

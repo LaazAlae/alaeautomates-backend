@@ -691,14 +691,14 @@ class APIExplorer {
         resultElement.classList.remove('loading', 'error');
         resultElement.classList.add('show');
         
-        const { company_name, similar_to, percentage, question_number, total_questions } = questionData;
+        const { company_name, similar_to, percentage, current, total } = questionData;
         
         resultElement.innerHTML = `
             <div style="text-align: left;">
                 <h3 style="color: var(--color-primary); margin-bottom: 16px;">📝 Interactive Question Required</h3>
                 
                 <div style="background: #fff3cd; padding: 16px; border-radius: 8px; margin-bottom: 16px; border-left: 4px solid #ffc107;">
-                    <h4 style="margin: 0 0 8px 0; color: #856404;">Question ${question_number || 1} of ${total_questions || '?'}:</h4>
+                    <h4 style="margin: 0 0 8px 0; color: #856404;">Question ${current || 1} of ${total || '?'}:</h4>
                     <p style="margin: 0 0 12px 0; color: #856404; font-size: 16px;">
                         Company '<strong>${company_name}</strong>' is similar to '<strong>${similar_to}</strong>' in DNM list
                         ${percentage ? ` (${percentage} match)` : ''}
@@ -764,7 +764,7 @@ class APIExplorer {
             
             const answerResult = await this.makeRequest(`/api/v1/monthly-statements/questions/${sessionId}/answer`, {
                 method: 'POST',
-                body: JSON.stringify({ answer: answer })
+                body: JSON.stringify({ response: answer === 'yes' ? 'y' : answer === 'no' ? 'n' : answer === 'skip' ? 's' : answer })
             });
             
             if (!answerResult.ok) {
