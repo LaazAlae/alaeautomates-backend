@@ -446,22 +446,6 @@ class APIExplorer {
                         await this.handleInteractiveQuestions(sessionId, resultElementId);
                         return;
                     } else if (status === 'completed') {
-                        // First verify results are actually available before showing completion
-                        const resultsCheck = await this.makeRequest(`/api/v1/monthly-statements/results/${sessionId}`);
-                        
-                        if (!resultsCheck.ok) {
-                            // Results not ready yet, continue polling but show what's happening
-                            const errorMsg = resultsCheck.data?.error || 'Results not ready';
-                            this.updateProcessingStatus(resultElementId, `Processing completed, but ${errorMsg.toLowerCase()}. Waiting...`);
-                            if (attempts < maxAttempts) {
-                                setTimeout(poll, delay);
-                            } else {
-                                // Show completion but with warnings about availability
-                                this.showCompletionWithWarnings(resultElement, sessionId, progress, resultsCheck);
-                            }
-                            return;
-                        }
-                        
                         // Show developer what the API response looks like and next steps
                         const resultElement = document.getElementById(resultElementId);
                         if (resultElement) {
