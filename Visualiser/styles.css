@@ -17,6 +17,8 @@
     --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
     --radius: 8px;
     --radius-lg: 12px;
+    --info-bg: #dbeafe;
+    --info-border: #3b82f6;
 }
 
 * {
@@ -688,4 +690,47 @@ textarea:focus {
 
 ::-webkit-scrollbar-thumb:hover {
     background: #94a3b8;
+}
+
+/* Use Case Boxes */
+.use-case-box {
+    background: var(--info-bg);
+    border: 1px solid var(--info-border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.use-case-box h4 {
+    color: var(--info-border);
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.use-case-box p {
+    margin-bottom: 0.75rem;
+    line-height: 1.6;
+}
+
+.use-case-box ol {
+    margin-left: 1.25rem;
+    margin-bottom: 0.75rem;
+}
+
+.use-case-box li {
+    margin-bottom: 0.5rem;
+    line-height: 1.5;
+}
+
+.use-case-box code {
+    background: rgba(59, 130, 246, 0.1);
+    color: var(--info-border);
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 0.875rem;
 }

@@ -118,7 +118,27 @@
                         </button>
                     </div>
                     <div class="endpoint-content" id="parse-excel-text">
-                        <p class="description">Parse Excel data from text input and generate robust JavaScript automation code</p>
+                        <div class="use-case-box">
+                            <h4>💡 What This Does</h4>
+                            <p>Converts Excel credit card transaction data into JavaScript code that automatically fills payment forms on websites.</p>
+                            
+                            <h4>🎯 Real-World Use Case</h4>
+                            <p>You have 200 credit card transactions in Excel that need to be entered into your company's payment portal. Instead of manually typing each one:</p>
+                            <ol>
+                                <li>Copy/paste your Excel data into the input below</li>
+                                <li>Click "Test Request" to generate automation code</li>
+                                <li>Copy the generated JavaScript</li>
+                                <li>Open your payment website</li>
+                                <li>Paste the code in browser console (F12)</li>
+                                <li>Click the green triangle to auto-fill each transaction</li>
+                            </ol>
+                            
+                            <h4>📥 What to Send</h4>
+                            <p>Excel data in this format: <code>InvoiceNumber    CardType    Amount    CustomerName</code></p>
+                            
+                            <h4>📤 What You Get Back</h4>
+                            <p>JavaScript automation code that works with legacy Edge browsers and includes error handling, timing controls, and progress tracking.</p>
+                        </div>
                         
                         <div class="endpoint-details">
                             <div class="request-section">
@@ -259,7 +279,26 @@
                         </button>
                     </div>
                     <div class="endpoint-content" id="process-statements">
-                        <p class="description">Start processing PDF statements with Excel company list</p>
+                        <div class="use-case-box">
+                            <h4>💡 What This Does</h4>
+                            <p>Analyzes PDF bank/credit card statements and categorizes transactions using your company list from Excel.</p>
+                            
+                            <h4>🎯 Real-World Use Case</h4>
+                            <p>You have a monthly statement PDF with 100+ transactions that need to be categorized for accounting:</p>
+                            <ol>
+                                <li>Upload your PDF statement (bank/credit card)</li>
+                                <li>Upload Excel file with your company names/categories</li>
+                                <li>System analyzes each transaction and matches companies</li>
+                                <li>Download categorized results for import into accounting software</li>
+                            </ol>
+                            
+                            <h4>📥 What to Send</h4>
+                            <p><strong>PDF:</strong> Bank or credit card statement<br>
+                            <strong>Excel:</strong> Company list with categories (Company Name, Category, etc.)</p>
+                            
+                            <h4>📤 What You Get Back</h4>
+                            <p>Session ID to track processing. Use the status endpoint below to check progress and download results.</p>
+                        </div>
                         
                         <div class="endpoint-details">
                             <div class="request-section">
@@ -352,7 +391,25 @@
                         </button>
                     </div>
                     <div class="endpoint-content" id="separate-invoices">
-                        <p class="description">Separate multi-invoice PDF into individual invoice files</p>
+                        <div class="use-case-box">
+                            <h4>💡 What This Does</h4>
+                            <p>Splits a single PDF containing multiple invoices into separate PDF files for each invoice.</p>
+                            
+                            <h4>🎯 Real-World Use Case</h4>
+                            <p>Your vendor sends you one PDF with 10 invoices, but your accounting system needs separate files:</p>
+                            <ol>
+                                <li>Upload the multi-invoice PDF file</li>
+                                <li>System automatically detects invoice boundaries</li>
+                                <li>Creates separate PDF for each invoice</li>
+                                <li>Download ZIP file with all separated invoices</li>
+                            </ol>
+                            
+                            <h4>📥 What to Send</h4>
+                            <p>PDF file containing multiple invoices</p>
+                            
+                            <h4>📤 What You Get Back</h4>
+                            <p>Download URL for ZIP file containing separate PDF files for each invoice.</p>
+                        </div>
                         
                         <div class="endpoint-details">
                             <div class="request-section">
