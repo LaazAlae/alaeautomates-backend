@@ -442,6 +442,22 @@ class APIExplorer {
                     const progress = statusResult.data.progress || {};
                     
                     if (status === 'completed') {
+                        // First verify results are actually available before showing completion
+                        const resultsCheck = await this.makeRequest(`/api/v1/monthly-statements/results/${sessionId}`);
+                        
+                        if (!resultsCheck.ok) {
+                            // Results not ready yet, continue polling but show what's happening
+                            const errorMsg = resultsCheck.data?.error || 'Results not ready';
+                            this.updateProcessingStatus(resultElementId, `Processing completed, but ${errorMsg.toLowerCase()}. Waiting...`);
+                            if (attempts < maxAttempts) {
+                                setTimeout(poll, delay);
+                            } else {
+                                // Show completion but with warnings about availability
+                                this.showCompletionWithWarnings(resultElement, sessionId, progress, resultsCheck);
+                            }
+                            return;
+                        }
+                        
                         // Show developer what the API response looks like and next steps
                         const resultElement = document.getElementById(resultElementId);
                         if (resultElement) {
@@ -575,6 +591,85 @@ class APIExplorer {
             element.classList.add('loading', 'show');
             element.innerHTML = `<div class="loading-spinner"></div>${message}`;
         }
+    }
+    
+    showCompletionWithWarnings(resultElement, sessionId, progress, resultsCheck) {
+        if (!resultElement) return;
+        
+        resultElement.classList.remove('loading');
+        resultElement.classList.add('success', 'show');
+        
+        const errorMsg = resultsCheck.data?.error || 'Results not ready yet';
+        
+        resultElement.innerHTML = `
+            <div style="text-align: left;">
+                <h3 style="color: var(--color-warning); margin-bottom: 16px;">⚠️ Processing Complete - Results Pending</h3>
+                
+                <div style="background: #fff3cd; padding: 16px; border-radius: 8px; margin-bottom: 16px; border-left: 4px solid #ffc107;">
+                    <h4 style="margin: 0 0 8px 0; color: #856404;">Backend Status:</h4>
+                    <p style="margin: 0; color: #856404; font-size: 14px;">
+                        Status API returned "completed" but results endpoints show: <strong>"${errorMsg}"</strong>
+                    </p>
+                </div>
+                
+                <div style="background: #1e1e1e; padding: 16px; border-radius: 8px; margin-bottom: 16px; border: 1px solid #333;">
+                    <h4 style="margin: 0 0 8px 0; color: #fff;">Session Info:</h4>
+                    <pre style="margin: 0; font-size: 13px; white-space: pre-wrap; color: #fff; font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;">{
+  "session_id": "${sessionId}",
+  "status": "completed",
+  "progress": ${JSON.stringify(progress, null, 2)},
+  "results_available": false,
+  "error": "${errorMsg}"
+}</pre>
+                </div>
+                
+                <div style="background: #e3f2fd; padding: 16px; border-radius: 8px; margin-bottom: 16px;">
+                    <h4 style="margin: 0 0 12px 0; color: var(--color-primary);">Developer Notes:</h4>
+                    <div style="font-size: 14px; line-height: 1.6;">
+                        <p><strong>Issue:</strong> Backend reports processing complete but results aren't ready yet.</p>
+                        <p><strong>Possible causes:</strong></p>
+                        <ul style="margin: 8px 0; padding-left: 20px;">
+                            <li>Results are still being written to disk</li>
+                            <li>File cleanup occurred too quickly</li>
+                            <li>Processing completed but file generation failed</li>
+                        </ul>
+                        <p><strong>Recommended handling:</strong> Continue polling or implement retry logic with exponential backoff.</p>
+                    </div>
+                </div>
+                
+                <div style="text-align: center;">
+                    <button type="button" class="btn btn-outline" style="margin: 4px;" data-action="retry-status" data-session="${sessionId}">
+                        Retry Status Check
+                    </button>
+                    <button type="button" class="btn btn-secondary" style="margin: 4px;" data-action="copy" data-text="${sessionId}">
+                        Copy Session ID
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        // Add event listeners
+        setTimeout(() => {
+            const buttons = resultElement.querySelectorAll('button[data-action]');
+            buttons.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const action = e.target.getAttribute('data-action');
+                    if (action === 'retry-status') {
+                        const session = e.target.getAttribute('data-session');
+                        this.testCheckStatus(session);
+                    } else if (action === 'copy') {
+                        const text = e.target.getAttribute('data-text');
+                        navigator.clipboard.writeText(text).then(() => {
+                            const originalText = e.target.textContent;
+                            e.target.textContent = 'Copied!';
+                            setTimeout(() => {
+                                e.target.textContent = originalText;
+                            }, 2000);
+                        });
+                    }
+                });
+            });
+        }, 100);
     }
 
     async testCheckStatus() {
