@@ -192,9 +192,21 @@ def create_app():
     
     @app.route('/visualizer/<path:filename>')
     def visualizer_assets(filename):
-        """Serve visualizer static assets"""
-        from flask import send_from_directory
-        return send_from_directory('Visualiser', filename)
+        """Serve visualizer static assets with proper MIME types"""
+        from flask import send_from_directory, Response
+        import mimetypes
+        
+        # Set proper MIME types
+        if filename.endswith('.css'):
+            mimetype = 'text/css'
+        elif filename.endswith('.js'):
+            mimetype = 'application/javascript'
+        else:
+            mimetype = mimetypes.guess_type(filename)[0] or 'application/octet-stream'
+        
+        response = send_from_directory('Visualiser', filename)
+        response.headers['Content-Type'] = mimetype
+        return response
 
     @app.route('/api/v1/docs')
     def api_docs():

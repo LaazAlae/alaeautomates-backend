@@ -1,107 +1,103 @@
-// AlaeAutomates API Explorer JavaScript
+// Simple API Explorer JavaScript
 class APIExplorer {
     constructor() {
         this.baseUrl = window.location.origin;
-        console.log(`[APIExplorer] Initialized with base URL: ${this.baseUrl}`);
-        console.log(`[APIExplorer] Window location:`, window.location);
         this.init();
     }
 
     init() {
         this.setupEventListeners();
-        this.setupTabNavigation();
-        this.setupEndpointToggles();
+        this.setupNavigation();
         this.loadBaseUrl();
+        this.showConnectionStatus(false);
+        // Auto-run tests on page load
+        this.autoRunTests();
     }
 
     setupEventListeners() {
-        // Base URL input
-        document.getElementById('baseUrl').addEventListener('change', (e) => {
-            this.baseUrl = e.target.value.replace(/\/$/, ''); // Remove trailing slash
-            localStorage.setItem('apiBaseUrl', this.baseUrl);
-        });
+        // Base URL change
+        const baseUrlInput = document.getElementById('baseUrl');
+        if (baseUrlInput) {
+            baseUrlInput.addEventListener('change', (e) => {
+                this.baseUrl = e.target.value.replace(/\/$/, '');
+                localStorage.setItem('apiBaseUrl', this.baseUrl);
+            });
+        }
 
         // Test connection button
-        document.getElementById('testConnection').addEventListener('click', () => {
-            this.testConnection();
-        });
+        const testConnBtn = document.getElementById('testConnection');
+        if (testConnBtn) {
+            testConnBtn.addEventListener('click', () => this.testConnection());
+        }
 
         // Health check button
-        document.getElementById('healthCheck').addEventListener('click', () => {
-            this.testHealthCheck();
-        });
+        const healthBtn = document.getElementById('healthCheck');
+        if (healthBtn) {
+            healthBtn.addEventListener('click', () => this.testHealthCheck());
+        }
 
-        // API test buttons
-        document.querySelectorAll('.btn-test[data-test]').forEach(btn => {
+        // All test buttons
+        document.querySelectorAll('.btn[data-endpoint]').forEach(btn => {
             btn.addEventListener('click', (e) => {
-                const testType = e.target.closest('button').getAttribute('data-test');
-                this.handleApiTest(testType);
+                const endpoint = e.target.getAttribute('data-endpoint');
+                this.handleTest(endpoint, e.target);
             });
         });
+
+        // Fill sample button
+        const fillBtn = document.getElementById('fillSampleBtn');
+        if (fillBtn) {
+            fillBtn.addEventListener('click', () => fillSampleData());
+        }
+
+        // View docs button
+        const docsBtn = document.getElementById('viewDocsBtn');
+        if (docsBtn) {
+            docsBtn.addEventListener('click', () => {
+                window.open(`${this.baseUrl}/api/v1/docs`, '_blank');
+            });
+        }
     }
 
-    setupTabNavigation() {
-        const tabBtns = document.querySelectorAll('.tab-btn');
-        const sections = document.querySelectorAll('.api-section');
+    setupNavigation() {
+        const navLinks = document.querySelectorAll('.nav-link');
+        const sections = document.querySelectorAll('.section');
 
-        tabBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                // Remove active class from all tabs and sections
-                tabBtns.forEach(b => b.classList.remove('active'));
+        navLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                // Remove active from all
+                navLinks.forEach(l => l.classList.remove('active'));
                 sections.forEach(s => s.classList.remove('active'));
 
-                // Add active class to clicked tab
-                btn.classList.add('active');
-
-                // Show corresponding section
-                const sectionId = btn.getAttribute('data-section');
+                // Add active to clicked
+                link.classList.add('active');
+                const sectionId = link.getAttribute('data-section');
                 const section = document.getElementById(sectionId);
                 if (section) {
                     section.classList.add('active');
-                }
-            });
-        });
-    }
-
-    setupEndpointToggles() {
-        const toggleBtns = document.querySelectorAll('.btn-toggle');
-        
-        toggleBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                const targetId = btn.getAttribute('data-target');
-                const content = document.getElementById(targetId);
-                
-                if (content) {
-                    content.classList.toggle('active');
-                    btn.classList.toggle('active');
+                    // Scroll to top of section smoothly
+                    section.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }
             });
         });
     }
 
     loadBaseUrl() {
-        const savedUrl = localStorage.getItem('apiBaseUrl');
-        console.log(`[APIExplorer] Saved URL from localStorage: ${savedUrl}`);
-        console.log(`[APIExplorer] Current window.location.origin: ${window.location.origin}`);
-        
-        // Only use saved URL if it's empty or matches current domain
-        if (savedUrl && savedUrl !== window.location.origin) {
-            console.log(`[APIExplorer] Clearing outdated localStorage URL: ${savedUrl}`);
+        const saved = localStorage.getItem('apiBaseUrl');
+        if (saved && saved !== window.location.origin) {
             localStorage.removeItem('apiBaseUrl');
-        } else if (savedUrl) {
-            this.baseUrl = savedUrl;
+        } else if (saved) {
+            this.baseUrl = saved;
         }
         
-        // Always update the input field to show current base URL
-        document.getElementById('baseUrl').value = this.baseUrl;
-        console.log(`[APIExplorer] Final base URL: ${this.baseUrl}`);
+        const input = document.getElementById('baseUrl');
+        if (input) {
+            input.value = this.baseUrl;
+        }
     }
 
     async makeRequest(url, options = {}) {
         const fullUrl = `${this.baseUrl}${url}`;
-        console.log(`[APIExplorer] Making request to: ${fullUrl}`);
-        console.log(`[APIExplorer] Base URL: ${this.baseUrl}`);
-        console.log(`[APIExplorer] Request options:`, options);
         
         try {
             const response = await fetch(fullUrl, {
@@ -112,11 +108,7 @@ class APIExplorer {
                 }
             });
 
-            console.log(`[APIExplorer] Response status: ${response.status}`);
-            console.log(`[APIExplorer] Response ok: ${response.ok}`);
-
             const data = await response.json();
-            console.log(`[APIExplorer] Response data:`, data);
             
             return {
                 ok: response.ok,
@@ -124,9 +116,6 @@ class APIExplorer {
                 data: data
             };
         } catch (error) {
-            console.error(`[APIExplorer] Request failed:`, error);
-            console.error(`[APIExplorer] Error message: ${error.message}`);
-            console.error(`[APIExplorer] Error stack:`, error.stack);
             return {
                 ok: false,
                 status: 0,
@@ -164,7 +153,7 @@ class APIExplorer {
         const element = document.getElementById(elementId);
         if (!element) return;
 
-        element.classList.remove('success', 'error', 'loading');
+        element.classList.remove('success', 'error', 'loading', 'show');
         
         if (isLoading) {
             element.classList.add('loading', 'show');
@@ -172,14 +161,48 @@ class APIExplorer {
             return;
         }
 
+        element.classList.add('show');
+
         if (result.ok) {
-            element.classList.add('success', 'show');
-            element.textContent = JSON.stringify(result.data, null, 2);
+            element.classList.add('success');
+            // Format JSON properly with syntax highlighting
+            const formattedJson = this.formatJsonResponse(result.data);
+            element.innerHTML = `<pre>${formattedJson}</pre>`;
         } else {
-            element.classList.add('error', 'show');
+            element.classList.add('error');
             const errorMsg = result.error || (result.data && result.data.error) || 'Request failed';
             element.textContent = `Error ${result.status}: ${errorMsg}`;
         }
+
+        // Scroll result into view smoothly
+        setTimeout(() => {
+            element.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'center'
+            });
+        }, 100);
+    }
+
+    formatJsonResponse(data) {
+        // Pretty format JSON with proper indentation
+        const jsonString = JSON.stringify(data, null, 2);
+        
+        // If it's JavaScript code, preserve formatting better
+        if (data.javascript_code) {
+            // Don't re-stringify the javascript_code, keep it formatted
+            const codeFormatted = data.javascript_code.replace(/\\n/g, '\n');
+            const otherData = { ...data };
+            delete otherData.javascript_code;
+            
+            let result = JSON.stringify(otherData, null, 2);
+            result = result.slice(0, -1); // Remove closing brace
+            result += ',\n  "javascript_code": "';
+            result += codeFormatted.replace(/"/g, '\\"').replace(/\n/g, '\\n');
+            result += '"\n}';
+            return result;
+        }
+        
+        return jsonString;
     }
 
     async testConnection() {
@@ -194,14 +217,14 @@ class APIExplorer {
             
             if (result.ok) {
                 this.showConnectionStatus(true);
-                button.innerHTML = '<i class="fas fa-check"></i>Connected';
+                button.innerHTML = 'Connected!';
                 setTimeout(() => {
                     button.innerHTML = originalText;
                     button.disabled = false;
                 }, 2000);
             } else {
                 this.showConnectionStatus(false);
-                button.innerHTML = '<i class="fas fa-times"></i>Failed';
+                button.innerHTML = 'Failed';
                 setTimeout(() => {
                     button.innerHTML = originalText;
                     button.disabled = false;
@@ -209,7 +232,7 @@ class APIExplorer {
             }
         } catch (error) {
             this.showConnectionStatus(false);
-            button.innerHTML = '<i class="fas fa-times"></i>Failed';
+            button.innerHTML = 'Failed';
             setTimeout(() => {
                 button.innerHTML = originalText;
                 button.disabled = false;
@@ -218,20 +241,15 @@ class APIExplorer {
     }
 
     showConnectionStatus(connected) {
-        let statusEl = document.querySelector('.connection-status');
-        
-        if (!statusEl) {
-            statusEl = document.createElement('div');
-            statusEl.className = 'connection-status';
-            document.querySelector('.header-info').appendChild(statusEl);
-        }
+        const statusEl = document.getElementById('connectionStatus');
+        if (!statusEl) return;
 
         if (connected) {
-            statusEl.className = 'connection-status connected';
-            statusEl.innerHTML = '<i class="fas fa-circle"></i>Connected';
+            statusEl.className = 'status-badge status-connected';
+            statusEl.textContent = 'Connected';
         } else {
-            statusEl.className = 'connection-status disconnected';
-            statusEl.innerHTML = '<i class="fas fa-circle"></i>Disconnected';
+            statusEl.className = 'status-badge status-disconnected';
+            statusEl.textContent = 'Disconnected';
         }
     }
 
@@ -241,39 +259,49 @@ class APIExplorer {
         this.displayResult('healthResult', result);
     }
 
-    handleApiTest(testType) {
-        switch (testType) {
-            case 'parse-excel-text':
-                this.testParseExcelText();
-                break;
-            case 'process-excel':
-                this.testProcessExcel();
-                break;
-            case 'download-code':
-                this.testDownloadCode();
-                break;
-            case 'process-statements':
-                this.testProcessStatements();
-                break;
-            case 'check-status':
-                this.testCheckStatus();
-                break;
-            case 'separate-invoices':
-                this.testSeparateInvoices();
-                break;
-            case 'cleanup-macro':
-                this.testCleanupMacro();
-                break;
-            case 'sort-macro':
-                this.testSortMacro();
-                break;
-            default:
-                console.warn('Unknown test type:', testType);
+    async handleTest(endpoint, button) {
+        const originalText = button.innerHTML;
+        button.innerHTML = '<div class="loading-spinner"></div>Testing...';
+        button.disabled = true;
+
+        try {
+            switch (endpoint) {
+                case 'parse-excel-text':
+                    await this.testParseExcelText();
+                    break;
+                case 'process-excel':
+                    await this.testProcessExcel();
+                    break;
+                case 'download-code':
+                    await this.testDownloadCode();
+                    break;
+                case 'process-statements':
+                    await this.testProcessStatements();
+                    break;
+                case 'check-status':
+                    await this.testCheckStatus();
+                    break;
+                case 'separate-invoices':
+                    await this.testSeparateInvoices();
+                    break;
+                case 'cleanup-macro':
+                    await this.testCleanupMacro();
+                    break;
+                case 'sort-macro':
+                    await this.testSortMacro();
+                    break;
+            }
+        } finally {
+            setTimeout(() => {
+                button.innerHTML = originalText;
+                button.disabled = false;
+            }, 1000);
         }
     }
 
     async testParseExcelText() {
-        const excelText = document.getElementById('excelTextInput').value.trim();
+        const textInput = document.getElementById('excelTextInput');
+        const excelText = textInput ? textInput.value.trim() : '';
         
         if (!excelText) {
             alert('Please enter Excel text data');
@@ -293,7 +321,7 @@ class APIExplorer {
     async testProcessExcel() {
         const fileInput = document.getElementById('excelFileInput');
         
-        if (!fileInput.files[0]) {
+        if (!fileInput || !fileInput.files[0]) {
             alert('Please select an Excel file');
             return;
         }
@@ -308,7 +336,8 @@ class APIExplorer {
     }
 
     async testDownloadCode() {
-        const jsCode = document.getElementById('jsCodeInput').value.trim();
+        const codeInput = document.getElementById('jsCodeInput');
+        const jsCode = codeInput ? codeInput.value.trim() : '';
         
         if (!jsCode) {
             alert('Please enter JavaScript code');
@@ -357,10 +386,10 @@ class APIExplorer {
     }
 
     async testProcessStatements() {
-        const pdfFile = document.getElementById('pdfFileInput').files[0];
-        const excelFile = document.getElementById('excelStatementsInput').files[0];
+        const pdfInput = document.getElementById('pdfFileInput');
+        const excelInput = document.getElementById('excelStatementsInput');
         
-        if (!pdfFile || !excelFile) {
+        if (!pdfInput?.files[0] || !excelInput?.files[0]) {
             alert('Please select both PDF and Excel files');
             return;
         }
@@ -368,15 +397,16 @@ class APIExplorer {
         this.displayResult('processStatementsResult', null, true);
         
         const formData = new FormData();
-        formData.append('pdf_file', pdfFile);
-        formData.append('excel_file', excelFile);
+        formData.append('pdf_file', pdfInput.files[0]);
+        formData.append('excel_file', excelInput.files[0]);
         
         const result = await this.makeFormRequest('/api/v1/monthly-statements/process', formData);
         this.displayResult('processStatementsResult', result);
     }
 
     async testCheckStatus() {
-        const sessionId = document.getElementById('sessionIdInput').value.trim();
+        const sessionInput = document.getElementById('sessionIdInput');
+        const sessionId = sessionInput ? sessionInput.value.trim() : '';
         
         if (!sessionId) {
             alert('Please enter a session ID');
@@ -390,9 +420,9 @@ class APIExplorer {
     }
 
     async testSeparateInvoices() {
-        const pdfFile = document.getElementById('invoicePdfInput').files[0];
+        const pdfInput = document.getElementById('invoicePdfInput');
         
-        if (!pdfFile) {
+        if (!pdfInput?.files[0]) {
             alert('Please select a PDF file');
             return;
         }
@@ -400,7 +430,7 @@ class APIExplorer {
         this.displayResult('separateInvoicesResult', null, true);
         
         const formData = new FormData();
-        formData.append('pdf_file', pdfFile);
+        formData.append('pdf_file', pdfInput.files[0]);
         
         const result = await this.makeFormRequest('/api/v1/invoices/separate', formData);
         this.displayResult('separateInvoicesResult', result);
@@ -419,117 +449,36 @@ class APIExplorer {
         const result = await this.makeRequest('/api/v1/excel-macros/sort');
         this.displayResult('sortMacroResult', result);
     }
+
+
+    async autoRunTests() {
+        // Wait a bit for page to load
+        setTimeout(async () => {
+            // Auto-run connection test
+            await this.testConnection();
+            // Auto-run health check
+            setTimeout(() => {
+                this.testHealthCheck();
+            }, 1000);
+        }, 500);
+    }
 }
 
-// Auto-fill sample data
+// Sample data function
 function fillSampleData() {
-    const sampleExcelText = `R130587    AMEX-1006    105.00    Wanyi Yang
+    const sampleText = `R130587    AMEX-1006    105.00    Wanyi Yang
 R131702    AMEX-1007    210.00    Virginia Clarke
 R132217    AMEX-1008    105.00    Smita Kumar`;
     
-    document.getElementById('excelTextInput').value = sampleExcelText;
+    const textInput = document.getElementById('excelTextInput');
+    if (textInput) {
+        textInput.value = sampleText;
+        // Scroll to the input after filling
+        textInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
 }
 
-// Initialize when DOM is loaded
+// Initialize when page loads
 document.addEventListener('DOMContentLoaded', () => {
     window.apiExplorer = new APIExplorer();
-    
-    // Add sample data button
-    const sampleBtn = document.createElement('button');
-    sampleBtn.textContent = '📝 Fill Sample Data';
-    sampleBtn.className = 'btn-test';
-    sampleBtn.style.marginLeft = '0.5rem';
-    sampleBtn.addEventListener('click', fillSampleData);
-    
-    const excelTextInput = document.getElementById('excelTextInput');
-    if (excelTextInput && excelTextInput.parentNode) {
-        excelTextInput.parentNode.appendChild(sampleBtn);
-    }
-});
-
-// Keyboard shortcuts
-document.addEventListener('keydown', (e) => {
-    // Ctrl/Cmd + Enter to test the currently visible endpoint
-    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-        e.preventDefault();
-        
-        const activeSection = document.querySelector('.api-section.active');
-        if (activeSection) {
-            const firstTestBtn = activeSection.querySelector('.btn-test');
-            if (firstTestBtn) {
-                firstTestBtn.click();
-            }
-        }
-    }
-    
-    // Ctrl/Cmd + K to focus on base URL input
-    if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
-        e.preventDefault();
-        document.getElementById('baseUrl').focus();
-    }
-});
-
-// Add copy functionality to code blocks
-document.addEventListener('click', (e) => {
-    if (e.target.closest('.code-block')) {
-        const codeBlock = e.target.closest('.code-block');
-        const code = codeBlock.querySelector('code');
-        if (code) {
-            navigator.clipboard.writeText(code.textContent).then(() => {
-                // Show temporary feedback
-                const originalBg = codeBlock.style.background;
-                codeBlock.style.background = '#dcfce7';
-                setTimeout(() => {
-                    codeBlock.style.background = originalBg;
-                }, 200);
-            });
-        }
-    }
-});
-
-// Add tooltips
-function createTooltip(element, text) {
-    element.title = text;
-    element.style.cursor = 'help';
-}
-
-// Initialize tooltips after DOM load
-document.addEventListener('DOMContentLoaded', () => {
-    // Add tooltips to method badges
-    document.querySelectorAll('.method.get').forEach(el => {
-        createTooltip(el, 'GET request - Retrieves data without side effects');
-    });
-    
-    document.querySelectorAll('.method.post').forEach(el => {
-        createTooltip(el, 'POST request - Sends data to create or process resources');
-    });
-    
-    // Add click-to-copy feedback to code blocks
-    document.querySelectorAll('.code-block').forEach(block => {
-        const copyHint = document.createElement('div');
-        copyHint.textContent = 'Click to copy';
-        copyHint.style.cssText = `
-            position: absolute;
-            top: 0.5rem;
-            right: 0.5rem;
-            background: rgba(0,0,0,0.7);
-            color: white;
-            padding: 0.25rem 0.5rem;
-            border-radius: 4px;
-            font-size: 0.75rem;
-            opacity: 0;
-            transition: opacity 0.2s;
-        `;
-        
-        block.style.position = 'relative';
-        block.appendChild(copyHint);
-        
-        block.addEventListener('mouseenter', () => {
-            copyHint.style.opacity = '1';
-        });
-        
-        block.addEventListener('mouseleave', () => {
-            copyHint.style.opacity = '0';
-        });
-    });
 });
