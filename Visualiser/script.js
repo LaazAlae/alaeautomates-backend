@@ -441,7 +441,11 @@ class APIExplorer {
                     const status = statusResult.data.status;
                     const progress = statusResult.data.progress || {};
                     
-                    if (status === 'completed') {
+                    if (status === 'questions_ready') {
+                        // Handle interactive questions workflow
+                        await this.handleInteractiveQuestions(sessionId, resultElementId);
+                        return;
+                    } else if (status === 'completed') {
                         // First verify results are actually available before showing completion
                         const resultsCheck = await this.makeRequest(`/api/v1/monthly-statements/results/${sessionId}`);
                         
@@ -670,6 +674,133 @@ class APIExplorer {
                 });
             });
         }, 100);
+    }
+    
+    async handleInteractiveQuestions(sessionId, resultElementId) {
+        try {
+            // Get the current question
+            const questionResult = await this.makeRequest(`/api/v1/monthly-statements/questions/${sessionId}`);
+            
+            if (!questionResult.ok) {
+                this.displayResult(resultElementId, {
+                    ok: false,
+                    error: 'Failed to get question: ' + (questionResult.data?.error || 'Unknown error')
+                });
+                return;
+            }
+            
+            const questionData = questionResult.data;
+            this.showInteractiveQuestion(resultElementId, sessionId, questionData);
+            
+        } catch (error) {
+            this.displayResult(resultElementId, {
+                ok: false,
+                error: `Question handling failed: ${error.message}`
+            });
+        }
+    }
+    
+    showInteractiveQuestion(resultElementId, sessionId, questionData) {
+        const resultElement = document.getElementById(resultElementId);
+        if (!resultElement) return;
+        
+        resultElement.classList.remove('loading', 'error');
+        resultElement.classList.add('show');
+        
+        const { company_name, similar_to, percentage, question_number, total_questions } = questionData;
+        
+        resultElement.innerHTML = `
+            <div style="text-align: left;">
+                <h3 style="color: var(--color-primary); margin-bottom: 16px;">📝 Interactive Question Required</h3>
+                
+                <div style="background: #fff3cd; padding: 16px; border-radius: 8px; margin-bottom: 16px; border-left: 4px solid #ffc107;">
+                    <h4 style="margin: 0 0 8px 0; color: #856404;">Question ${question_number || 1} of ${total_questions || '?'}:</h4>
+                    <p style="margin: 0 0 12px 0; color: #856404; font-size: 16px;">
+                        Company '<strong>${company_name}</strong>' is similar to '<strong>${similar_to}</strong>' in DNM list
+                        ${percentage ? ` (${percentage} match)` : ''}
+                    </p>
+                    <p style="margin: 0; color: #856404; font-weight: 600;">
+                        Are they the same company?
+                    </p>
+                </div>
+                
+                <div style="background: #1e1e1e; padding: 16px; border-radius: 8px; margin-bottom: 16px; border: 1px solid #333;">
+                    <h4 style="margin: 0 0 8px 0; color: #fff;">API Question Data:</h4>
+                    <pre style="margin: 0; font-size: 13px; white-space: pre-wrap; color: #fff; font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;">${JSON.stringify(questionData, null, 2)}</pre>
+                </div>
+                
+                <div style="background: #e3f2fd; padding: 16px; border-radius: 8px; margin-bottom: 16px;">
+                    <h4 style="margin: 0 0 12px 0; color: var(--color-primary);">🔧 Implementation Guide:</h4>
+                    <div style="font-size: 14px; line-height: 1.6;">
+                        <p><strong>Frontend Flow:</strong></p>
+                        <ol style="margin: 8px 0; padding-left: 20px;">
+                            <li>GET <code>/api/v1/monthly-statements/questions/{session_id}</code> to get question</li>
+                            <li>Show question to user with Yes/No/Skip options</li>
+                            <li>POST answer to <code>/api/v1/monthly-statements/questions/{session_id}/answer</code></li>
+                            <li>Continue polling status until all questions answered</li>
+                        </ol>
+                        <p><strong>Answer format:</strong> <code>{"answer": "yes|no|skip"}</code></p>
+                    </div>
+                </div>
+                
+                <div style="text-align: center; margin-bottom: 16px;">
+                    <button type="button" class="btn btn-success" style="margin: 4px;" data-action="answer" data-answer="yes" data-session="${sessionId}">
+                        Yes - Same Company
+                    </button>
+                    <button type="button" class="btn btn-outline" style="margin: 4px;" data-action="answer" data-answer="no" data-session="${sessionId}">
+                        No - Different Companies  
+                    </button>
+                    <button type="button" class="btn btn-secondary" style="margin: 4px;" data-action="answer" data-answer="skip" data-session="${sessionId}">
+                        Skip All Questions
+                    </button>
+                </div>
+                
+                <div style="text-align: center; font-size: 12px; color: var(--color-gray-500);">
+                    This simulates the interactive questioning workflow in your frontend
+                </div>
+            </div>
+        `;
+        
+        // Add event listeners
+        setTimeout(() => {
+            const buttons = resultElement.querySelectorAll('button[data-action="answer"]');
+            buttons.forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const answer = e.target.getAttribute('data-answer');
+                    const session = e.target.getAttribute('data-session');
+                    await this.submitAnswer(session, answer, resultElementId);
+                });
+            });
+        }, 100);
+    }
+    
+    async submitAnswer(sessionId, answer, resultElementId) {
+        try {
+            this.updateProcessingStatus(resultElementId, `Submitting answer: ${answer}...`);
+            
+            const answerResult = await this.makeRequest(`/api/v1/monthly-statements/questions/${sessionId}/answer`, {
+                method: 'POST',
+                body: JSON.stringify({ answer: answer })
+            });
+            
+            if (!answerResult.ok) {
+                this.displayResult(resultElementId, {
+                    ok: false,
+                    error: 'Failed to submit answer: ' + (answerResult.data?.error || 'Unknown error')
+                });
+                return;
+            }
+            
+            // Resume polling after answer submitted
+            this.updateProcessingStatus(resultElementId, 'Answer submitted, checking for more questions...');
+            await this.pollProcessingStatus(sessionId, resultElementId);
+            
+        } catch (error) {
+            this.displayResult(resultElementId, {
+                ok: false,
+                error: `Answer submission failed: ${error.message}`
+            });
+        }
     }
 
     async testCheckStatus() {
